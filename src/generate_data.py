@@ -4,21 +4,21 @@ Simulates realistic Pakistani fashion social media posts and comments dataset
 for Project 3: Pakistan Social Audience & Campaign Intelligence Engine.
 
 Creates:
-- Table A: data/raw/posts_raw.csv (2,500 public posts)
-- Table B: data/raw/comments_raw.csv (10,000 public comments in Roman Urdu / English)
+- Table A: data/posts.csv (2,000 public posts)
+- Table B: data/comments.csv (8,000 public comments in Roman Urdu / English)
+All simulated records are tagged with data_source='simulated'.
 """
 
 import os
 import random
 import numpy as np
 import pandas as pd
-from datetime import datetime, timedelta
 
 def generate_pakistani_fashion_data(seed=42):
     random.seed(seed)
     np.random.seed(seed)
     
-    print("[Dataset Engine] Generating Table A: Social Media Posts (~2,500 records)...")
+    print("[Dataset Engine] Generating Table A: Social Media Posts (2,000 records)...")
     
     brands = [
         'Sapphire', 'Khaadi', 'Gul Ahmed', 'Alkaram Studio', 
@@ -30,207 +30,200 @@ def generate_pakistani_fashion_data(seed=42):
     platform_weights = [0.50, 0.30, 0.20]
     
     campaigns = [
-        'Eid-ul-Fitr Festive 2024',
-        'Summer Lawn Vol 1',
+        'Eid Collection',
         '11.11 Mega Sale',
-        'Blessed Friday 12.12',
-        'Winter Khaddar & Linen',
-        'Mid-Summer Pret Drop'
+        '12.12 Sale',
+        'Summer Lawn Vol 1',
+        'Winter Khaddar'
     ]
     
     content_types = [
         'Reel',
-        'Product Carousel',
-        'Influencer Video',
-        'Static Photo',
+        'Product Photo',
+        'Influencer Post',
         'Styling Video',
         'Sale Announcement'
     ]
-    content_weights = [0.35, 0.25, 0.15, 0.10, 0.10, 0.05]
     
-    product_categories = [
-        'Unstitched 3-Piece Lawn',
-        'Ready-to-Wear Stitched Pret',
-        'Luxury Festive Chiffon',
-        'Embroidered 2-Piece Kurti',
-        'Digital Printed Lawn'
-    ]
+    base_multipliers = {
+        'Reel': 1.6,
+        'Influencer Post': 1.3,
+        'Styling Video': 1.1,
+        'Sale Announcement': 1.0,
+        'Product Photo': 0.8
+    }
     
-    num_posts = 2500
+    # Authentic Pakistani fashion comment topics and texts (Roman Urdu + English)
+    topics_dict = {
+        "Price inquiry": [
+            "Price please?",
+            "Price kya hai is suit ki?",
+            "Rate bata dein please",
+            "Kitne ka hai ye suit?",
+            "Price?"
+        ],
+        "Price complaint": [
+            "Price bohat zyada hai yar, lawn suit itna mehnga!",
+            "Itna mehnga kyun hai?",
+            "Too expensive for an unstitched lawn suit",
+            "Rate bohat high hai honestly, not worth it"
+        ],
+        "Discount": [
+            "Any discount on this suit?",
+            "Sale kab lag rahi hai?",
+            "Discount code hai koi?",
+            "11.11 pe kitna off hoga?",
+            "Is there any promo code available?"
+        ],
+        "Delivery": [
+            "Delivery kitne din mein hogi Lahore mein?",
+            "Ordered last week, still waiting! Very slow service",
+            "Order abhi tak nahi pohancha, tracking id dein",
+            "Is Cash on Delivery (COD) available for Karachi?",
+            "Delivery charges kitne hain Karachi ke?"
+        ],
+        "Availability": [
+            "Is this available in Karachi store?",
+            "Stock mein hai ya out of stock?",
+            "Medium size available hai?",
+            "Please restock this article! Missed it during sale",
+            "Large size restock kab hoga?"
+        ],
+        "Fabric": [
+            "Fabric kaisa hai? Pure lawn hai ya mixed?",
+            "Is the dupatta pure silk or chiffon?",
+            "Quality achi hai ya nahi?",
+            "Colour fade to nahi hota wash ke baad?",
+            "Fabric stuff kaisa hai?"
+        ],
+        "Praise": [
+            "Very beautiful dress! Loved the color",
+            "Bohat hi pyara design hai mashallah!",
+            "Love this collection as always",
+            "Gorgeous styling and elegant embroidery"
+        ],
+        "Inbox request": [
+            "Inbox me details send kar dein",
+            "DM details please",
+            "Inbox kardo price aur fabric details",
+            "Book this piece for me, check inbox"
+        ]
+    }
+    
+    def get_topic_weights(ctype, camp):
+        w = {k: 1.0 for k in topics_dict}
+        if "Sale" in camp or ctype == "Sale Announcement":
+            w["Discount"] *= 3.5
+            w["Price complaint"] *= 1.8
+        if ctype == "Influencer Post":
+            w["Praise"] *= 3.0
+            w["Inbox request"] *= 2.2
+        if ctype == "Product Photo":
+            w["Fabric"] *= 2.8
+            w["Availability"] *= 2.2
+        if camp == "Eid Collection":
+            w["Delivery"] *= 2.5
+            w["Availability"] *= 1.8
+        return w
+
+    num_posts = 2000
     posts = []
+    comments = []
     
     for i in range(1, num_posts + 1):
-        post_id = f"P{i:04d}"
+        pid = f"P{i:04d}"
         brand = np.random.choice(brands, p=brand_weights)
         platform = np.random.choice(platforms, p=platform_weights)
-        campaign = np.random.choice(campaigns)
-        content_type = np.random.choice(content_types, p=content_weights)
-        product_cat = np.random.choice(product_categories)
-        days_since = int(np.random.randint(1, 90))
+        camp = random.choice(campaigns)
+        ct = random.choice(content_types)
+        days_since = random.randint(1, 30)
         
-        # Base price in PKR based on category
-        if 'Luxury' in product_cat:
-            price_pkr = int(np.random.choice([8990, 10990, 12990, 14990, 18500]))
-        elif 'Stitched' in product_cat:
-            price_pkr = int(np.random.choice([4990, 5990, 7490, 8990]))
-        elif 'Kurti' in product_cat:
-            price_pkr = int(np.random.choice([2490, 2990, 3490, 3990]))
-        else: # Lawn 3-piece
-            price_pkr = int(np.random.choice([3490, 3990, 4490, 4990, 5990]))
-            
-        # Realistic engagement dynamics by content format
-        if content_type == 'Reel':
-            views = int(np.random.lognormal(mean=9.8, sigma=0.8)) # ~18k avg
-            likes = int(views * np.random.uniform(0.04, 0.09))
-            shares = int(likes * np.random.uniform(0.08, 0.20))
-            comments_count = int(likes * np.random.uniform(0.05, 0.15))
-        elif content_type == 'Influencer Video':
-            views = int(np.random.lognormal(mean=10.2, sigma=0.7)) # ~27k avg
-            likes = int(views * np.random.uniform(0.05, 0.10))
-            shares = int(likes * np.random.uniform(0.06, 0.16))
-            comments_count = int(likes * np.random.uniform(0.06, 0.18))
-        elif content_type == 'Sale Announcement':
-            views = int(np.random.lognormal(mean=9.2, sigma=0.6))
-            likes = int(views * np.random.uniform(0.03, 0.07))
-            shares = int(likes * np.random.uniform(0.12, 0.30)) # highly shared
-            comments_count = int(likes * np.random.uniform(0.10, 0.25)) # high inquiries
-        else: # Carousel / Static / Styling
-            views = int(np.random.lognormal(mean=8.9, sigma=0.7))
-            likes = int(views * np.random.uniform(0.03, 0.06))
-            shares = int(likes * np.random.uniform(0.03, 0.08))
-            comments_count = int(likes * np.random.uniform(0.03, 0.09))
-            
-        # Ensure minimums
+        base = base_multipliers[ct]
+        views = int(np.random.lognormal(10, 0.6) * base)
+        likes = int(views * np.random.uniform(0.02, 0.06) * base)
+        cc = int(views * np.random.uniform(0.002, 0.008) * base)
+        shares = int(views * np.random.uniform(0.001, 0.005))
+        
+        # Inject realistic anomalies (~3.5% of posts)
+        # e.g., viral reach with high comments/complaints or high likes/low shares
+        is_anomaly = False
+        if random.random() < 0.035:
+            is_anomaly = True
+            choice = random.choice(['viral_burst', 'comment_surge', 'low_engagement'])
+            if choice == 'viral_burst':
+                likes = int(likes * random.uniform(3.5, 6.0))
+                views = int(views * random.uniform(2.5, 4.0))
+            elif choice == 'comment_surge':
+                cc = int(cc * random.uniform(4.0, 7.5)) # customer complaint surge
+            else:
+                likes = max(5, int(likes * 0.15))
+                views = max(100, int(views * 0.25))
+
         likes = max(15, likes)
-        comments_count = max(5, comments_count)
+        cc = max(5, cc)
         shares = max(1, shares)
         views = max(likes * 5, views)
-        
+
         posts.append({
-            'post_id': post_id,
+            'post_id': pid,
             'brand': brand,
             'platform': platform,
-            'campaign': campaign,
-            'content_type': content_type,
-            'product_category': product_cat,
-            'price_pkr': price_pkr,
+            'campaign': camp,
+            'content_type': ct,
+            'product_category': "Lawn suit",
             'likes': likes,
-            'comments_count': comments_count,
+            'comments_count': cc,
             'shares': shares,
             'views': views,
-            'days_since_post': days_since
+            'days_since_post': days_since,
+            'data_source': 'simulated'
         })
         
-    df_posts = pd.DataFrame(posts)
-    
-    print("\n[Dataset Engine] Generating Table B: Social Media Comments (~10,000 records)...")
-    
-    # Archetype comment templates covering authentic Pakistani shopping interactions
-    comment_archetypes = [
-        # 1. Price Inquiries & Price Sensitivity
-        {"text": "Price please?", "lang": "English", "topic": "Price Inquiry", "intent": "Inquiry", "sentiment": "Neutral"},
-        {"text": "Price kya hai is suit ki?", "lang": "Roman Urdu", "topic": "Price Inquiry", "intent": "Inquiry", "sentiment": "Neutral"},
-        {"text": "Price bohat zyada hai yar, lawn suit itna mehnga!", "lang": "Roman Urdu", "topic": "Price Resistance", "intent": "Feedback", "sentiment": "Negative"},
-        {"text": "Overpriced honestly, quality doesn't justify this rate", "lang": "English", "topic": "Price Resistance", "intent": "Feedback", "sentiment": "Negative"},
-        {"text": "Plz inbox price details and discount code", "lang": "Mixed", "topic": "Price Inquiry", "intent": "Inquiry", "sentiment": "Neutral"},
-        {"text": "Any discount on this article?", "lang": "English", "topic": "Price Inquiry", "intent": "Inquiry", "sentiment": "Neutral"},
-        {"text": "Sale mein kitne ka milega ye?", "lang": "Roman Urdu", "topic": "Price Inquiry", "intent": "Inquiry", "sentiment": "Neutral"},
-        {"text": "Rate bta dain plz", "lang": "Roman Urdu", "topic": "Price Inquiry", "intent": "Inquiry", "sentiment": "Neutral"},
+        # Generate 4 associated comments per post = 8,000 comments total
+        tw = get_topic_weights(ct, camp)
+        topic_keys = list(tw.keys())
+        topic_weights = list(tw.values())
         
-        # 2. Delivery, Logistics & City Inquiries
-        {"text": "Delivery kitne din mein hogi Lahore mein?", "lang": "Roman Urdu", "topic": "Delivery Inquiry", "intent": "Inquiry", "sentiment": "Neutral"},
-        {"text": "Is Cash on Delivery (COD) available for Karachi?", "lang": "Mixed", "topic": "Delivery Inquiry", "intent": "Inquiry", "sentiment": "Neutral"},
-        {"text": "Ordered last week, still waiting for delivery! Very slow service", "lang": "English", "topic": "Delivery Delay", "intent": "Complaint", "sentiment": "Negative"},
-        {"text": "Peshawar delivery charges kitne hain?", "lang": "Roman Urdu", "topic": "Delivery Inquiry", "intent": "Inquiry", "sentiment": "Neutral"},
-        {"text": "Tracking number kab tak aega? 5 days ho gye hain", "lang": "Roman Urdu", "topic": "Delivery Delay", "intent": "Complaint", "sentiment": "Negative"},
-        {"text": "Do you offer urgent 1-day delivery in Islamabad / Rawalpindi?", "lang": "English", "topic": "Delivery Inquiry", "intent": "Inquiry", "sentiment": "Neutral"},
-        {"text": "Faisalabad delivery kitne time me hoti hai?", "lang": "Roman Urdu", "topic": "Delivery Inquiry", "intent": "Inquiry", "sentiment": "Neutral"},
-        {"text": "Parcel received today, on-time delivery thank you!", "lang": "English", "topic": "Delivery Praise", "intent": "Feedback", "sentiment": "Positive"},
-
-        # 3. Product Details, Fabric & Material Quality
-        {"text": "Fabric stuff kaisa hai? Pure lawn hai ya mixed?", "lang": "Roman Urdu", "topic": "Fabric Inquiry", "intent": "Inquiry", "sentiment": "Neutral"},
-        {"text": "Is the dupatta pure silk or chiffon?", "lang": "English", "topic": "Fabric Inquiry", "intent": "Inquiry", "sentiment": "Neutral"},
-        {"text": "Color fade toh nahi hoga after first wash?", "lang": "Roman Urdu", "topic": "Quality Concern", "intent": "Inquiry", "sentiment": "Neutral"},
-        {"text": "Fabric is sheer or see-through? Need unstitched details", "lang": "English", "topic": "Fabric Inquiry", "intent": "Inquiry", "sentiment": "Neutral"},
-        {"text": "Embroidery thread work hai ya printed?", "lang": "Roman Urdu", "topic": "Fabric Inquiry", "intent": "Inquiry", "sentiment": "Neutral"},
-        {"text": "Very poor fabric quality, rough stuff, not worth buying", "lang": "English", "topic": "Quality Complaint", "intent": "Complaint", "sentiment": "Negative"},
-        {"text": "Quality was top notch! Original lawn fabric, loved it", "lang": "English", "topic": "Quality Praise", "intent": "Feedback", "sentiment": "Positive"},
-
-        # 4. Sizing, Availability & Restock
-        {"text": "Is Medium size available in this color?", "lang": "English", "topic": "Sizing Inquiry", "intent": "Inquiry", "sentiment": "Neutral"},
-        {"text": "Small size out of stock dikha raha hai, restock kab hoga?", "lang": "Roman Urdu", "topic": "Stock Inquiry", "intent": "Inquiry", "sentiment": "Neutral"},
-        {"text": "Plus size / XL stitching option hai kya?", "lang": "Mixed", "topic": "Sizing Inquiry", "intent": "Inquiry", "sentiment": "Neutral"},
-        {"text": "Please restock this article! Missed it during sale", "lang": "English", "topic": "Stock Inquiry", "intent": "Inquiry", "sentiment": "Neutral"},
-        {"text": "Unstitched available hai ya only ready to wear?", "lang": "Roman Urdu", "topic": "Stock Inquiry", "intent": "Inquiry", "sentiment": "Neutral"},
-        {"text": "Size chart send kar dain please", "lang": "Roman Urdu", "topic": "Sizing Inquiry", "intent": "Inquiry", "sentiment": "Neutral"},
-
-        # 5. Purchase Intent & Direct Ordering
-        {"text": "How can I order this? Website link please", "lang": "English", "topic": "Purchase Intent", "intent": "High Intent", "sentiment": "Positive"},
-        {"text": "Book one piece for me in Medium, check DM", "lang": "English", "topic": "Purchase Intent", "intent": "High Intent", "sentiment": "Positive"},
-        {"text": "Mera order confirm kar dein, details inbox kardi hain", "lang": "Roman Urdu", "topic": "Purchase Intent", "intent": "High Intent", "sentiment": "Positive"},
-        {"text": "Want to buy 2 suits, any bundle offer?", "lang": "English", "topic": "Purchase Intent", "intent": "High Intent", "sentiment": "Positive"},
-        {"text": "Plz book this dress for me urgently", "lang": "Mixed", "topic": "Purchase Intent", "intent": "High Intent", "sentiment": "Positive"},
-
-        # 6. Aesthetic Praise & Brand Appreciation
-        {"text": "Bohat hi pyara design hai, mashallah!", "lang": "Roman Urdu", "topic": "Appreciation", "intent": "Casual", "sentiment": "Positive"},
-        {"text": "Gorgeous color combination! Loved the reel", "lang": "English", "topic": "Appreciation", "intent": "Casual", "sentiment": "Positive"},
-        {"text": "Zabardast collection as always", "lang": "Roman Urdu", "topic": "Appreciation", "intent": "Casual", "sentiment": "Positive"},
-        {"text": "Stunning model and elegant styling", "lang": "English", "topic": "Appreciation", "intent": "Casual", "sentiment": "Positive"},
-        {"text": "Disappointed with customer support, no one replies to DMs", "lang": "English", "topic": "Customer Support", "intent": "Complaint", "sentiment": "Negative"}
-    ]
-    
-    comments = []
-    num_comments = 10000
-    
-    # Sample posts proportionally to comments_count
-    all_post_ids = df_posts['post_id'].values
-    
-    # We assign comments across posts
-    comment_id_counter = 1
-    for _ in range(num_comments):
-        p_id = random.choice(all_post_ids)
-        arch = random.choice(comment_archetypes)
-        
-        # Slight variation in comment text to simulate organic human typing
-        text = arch['text']
-        if random.random() < 0.25:
-            # Add emojis or variations
-            emojis = [" ❤️", " 😍", " ✨", " 🙏", " !!", "...", " 🔥", " 👗"]
-            text += random.choice(emojis)
-        if random.random() < 0.15:
-            text = text.lower()
+        for _ in range(4):
+            t = random.choices(topic_keys, weights=topic_weights)[0]
+            txt = random.choice(topics_dict[t])
             
-        comments.append({
-            'comment_id': f"C{comment_id_counter:05d}",
-            'post_id': p_id,
-            'comment_text': text,
-            'language_type': arch['lang'],
-            'reference_topic': arch['topic'],
-            'reference_intent': arch['intent'],
-            'reference_sentiment': arch['sentiment']
-        })
-        comment_id_counter += 1
-        
+            # Determine language type
+            is_english = txt.isascii() and any(x in txt for x in [
+                "Price please", "Any discount", "Is this", "Very beautiful", 
+                "DM", "Too expensive", "Ordered", "Love", "Is it", "Is there"
+            ])
+            lang = "English" if is_english else "Roman Urdu"
+            if "please" in txt.lower() and ("kya" in txt or "bata" in txt or "kitne" in txt):
+                lang = "Mixed"
+                
+            comments.append({
+                'post_id': pid,
+                'comment_text': txt,
+                'true_topic': t,
+                'language_type': lang,
+                'data_source': 'simulated'
+            })
+            
+    df_posts = pd.DataFrame(posts)
     df_comments = pd.DataFrame(comments)
     
-    # Save files to Project_3/data/raw/
-    out_dir = os.path.join(os.path.dirname(__file__), '..', 'data', 'raw')
-    os.makedirs(out_dir, exist_ok=True)
+    # Save to data/ (standard) and data/raw/
+    base_dir = os.path.join(os.path.dirname(__file__), '..', 'data')
+    os.makedirs(base_dir, exist_ok=True)
+    os.makedirs(os.path.join(base_dir, 'raw'), exist_ok=True)
     
-    posts_path = os.path.join(out_dir, 'posts_raw.csv')
-    comments_path = os.path.join(out_dir, 'comments_raw.csv')
+    # Save standard posts.csv & comments.csv
+    df_posts.to_csv(os.path.join(base_dir, 'posts.csv'), index=False)
+    df_comments.to_csv(os.path.join(base_dir, 'comments.csv'), index=False)
     
-    df_posts.to_csv(posts_path, index=False)
-    df_comments.to_csv(comments_path, index=False)
+    # Save raw mirrors
+    df_posts.to_csv(os.path.join(base_dir, 'raw', 'posts_raw.csv'), index=False)
+    df_comments.to_csv(os.path.join(base_dir, 'raw', 'comments_raw.csv'), index=False)
     
-    print(f"\n[Done] Successfully generated:")
-    print(f" -> Table A: {posts_path} ({len(df_posts):,} posts)")
-    print(f" -> Table B: {comments_path} ({len(df_comments):,} comments)")
-    print("\nTable A Preview:")
-    print(df_posts.head(3))
-    print("\nTable B Preview:")
-    print(df_comments.head(3))
-    
+    print(f"\n[Generated Successfully]")
+    print(f" -> {os.path.join(base_dir, 'posts.csv')} ({len(df_posts):,} posts)")
+    print(f" -> {os.path.join(base_dir, 'comments.csv')} ({len(df_comments):,} comments)")
     return df_posts, df_comments
 
 if __name__ == '__main__':
