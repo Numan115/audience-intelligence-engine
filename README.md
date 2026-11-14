@@ -35,6 +35,25 @@ The marketing team receives thousands of customer comments:
 
 ---
 
+## 🖼️ Dashboard Screenshots
+
+### 1. Content Attention (Which content types attract attention)
+![Content Attention](screenshots/1_content.png)
+
+### 2. Audience Wants (Comment need clusters & authentic customer voice)
+![Audience Wants](screenshots/2_audience_wants.png)
+
+### 3. Unusual Posts (Context-aware anomaly detection via Isolation Forest)
+![Unusual Posts](screenshots/3_unusual_posts.png)
+
+### 4. Audience Segments (Language vs. Need cross-tabulation & personas)
+![Audience Segments](screenshots/4_audience_segments.png)
+
+### 5. Recommended Actions (Evidence-based marketing next steps)
+![Recommended Actions](screenshots/5_next_steps.png)
+
+---
+
 ## 🏗️ Project Architecture
 
 ```text
@@ -53,21 +72,35 @@ Pakistan-Social-Audience-Intelligence-Engine/
 ├── src/
 │   ├── generate_data.py    # Simulates realistic Pakistani lawn posts & comments
 │   ├── preprocess_nlp.py   # Specialized Roman Urdu & English stopword / slang normalizer
-│   └── engine.py           # Core ML engine (metrics, clustering, anomaly detection, recs)
+│   ├── engine.py           # Core ML engine (metrics, clustering, anomaly detection, recs)
+│   └── anomaly_detector.py # Part 2: Context-aware anomaly sensitivity & diagnostic engine
+│
+├── screenshots/            # Visual UI proof for all 5 Streamlit tabs
+│   ├── 1_content.png
+│   ├── 2_audience_wants.png
+│   ├── 3_unusual_posts.png
+│   ├── 4_audience_segments.png
+│   └── 5_next_steps.png
 │
 ├── visualizations/         # High-Resolution Exported Plots
 │   ├── 01_comment_cluster_distribution.png
 │   ├── 02_brand_audience_needs_heatmap.png
 │   ├── 03_content_type_engagement.png
-│   └── 04_language_distribution.png
+│   ├── 04_language_distribution.png
+│   ├── 05_anomaly_detection_scatter.png
+│   └── 06_anomaly_root_causes.png
 │
 ├── reports/
-│   └── phase1_findings.md  # Detailed analytical report
+│   ├── phase1_findings.md  # Phase 1 analytical report
+│   ├── part2_anomaly_and_segment_findings.md # Part 2 diagnostic report
+│   ├── anomaly_sensitivity_analysis.csv
+│   └── diagnosed_anomalies.csv
 │
 ├── app.py                  # Interactive 5-tab Streamlit web application
 ├── DATA_SOURCES.md         # Data provenance and external academic citations
-├── README.md               # Complete documentation
-└── requirements.txt        # Dependencies
+├── README.md               # Complete documentation with embedded screenshots
+├── requirements.txt        # Dependencies
+└── Project_3_Submission.zip # 0.85 MB complete LMS archive
 ```
 
 ---
