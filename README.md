@@ -1,6 +1,11 @@
 # Pakistan Social Audience & Campaign Intelligence Engine
 **Clustering-Based Marketing Decision Engine for Pakistani Fashion E-Commerce**
 
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://numan115-audience-intelligence-engine-app.streamlit.app)
+
+> 🚀 **Live App:** [https://numan115-audience-intelligence-engine-app.streamlit.app](https://numan115-audience-intelligence-engine-app.streamlit.app)  
+> 📄 **Final Executive Report:** [`reports/final_executive_report.md`](reports/final_executive_report.md)
+
 ---
 
 ## 📌 Executive Summary & Business Problem
@@ -145,3 +150,18 @@ This guarantees Reels are benchmarked strictly against Reels, and static Product
    ```
 4. **Explore Step-by-Step Notebooks:**
    Open any notebook in `notebooks/` using Jupyter or VS Code.
+
+---
+
+## ?? Reports & Documentation
+
+| Document | Description |
+|---|---|
+| [eports/final_executive_report.md](reports/final_executive_report.md) | Comprehensive final report: all 5 questions, methodology, results, recommendations |
+| [eports/part2_anomaly_and_segment_findings.md](reports/part2_anomaly_and_segment_findings.md) | Part 2: Anomaly detection & audience persona findings |
+| [eports/phase1_findings.md](reports/phase1_findings.md) | Part 1: Foundation & clustering findings |
+| [DATA_SOURCES.md](DATA_SOURCES.md) | Dataset provenance & academic citations |
+
+---
+
+*Pakistan Social Audience & Campaign Intelligence Engine | Muhammad Numan | UMT Lahore � Big Data Analytics 2026*
